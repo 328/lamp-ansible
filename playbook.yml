@@ -1,0 +1,46 @@
+---
+- hosts: all
+  user: root
+  sudo: yes
+  tasks:
+    - name: mysql community install
+      yum: name=http://dev.mysql.com/get/mysql57-community-release-el6-7.noarch.rpm
+    - name: install require package
+      yum: name={{ item }} state=present
+      with_items:
+        - "yum-utils"
+        - "git"
+        - "vim"
+        - "httpd"
+        - "epel-release"
+    - name: disable 57
+      command: yum-config-manager --disable mysql57-community
+    - name: enable 56
+      command: yum-config-manager --enable mysql56-community
+    - name: install mysql-community-server
+      yum: name=mysql-community-server
+    - name: start mysqld
+      service: enabled=yes name=mysqld state=running
+
+    - name: install repository
+      yum: name=http://rpms.famillecollet.com/enterprise/remi-release-7.rpm
+    - name: install php56
+      yum: name={{ item }} state=present enablerepo=remi,remi-php56
+      with_items:
+        - "php"
+        - "php-devel"
+        - "php-pear"
+        - "php-mbstring"
+        - "php-xml"
+        - "php-mcrypt"
+        - "php-gd"
+        - "php-pecl-xdebug"
+        - "php-opcache"
+        - "php-pecl-apcu"
+        - "php-fpm"
+        - "php-phpunit-PHPUnit"
+        - "php-mysqlnd"
+    - name: copy php.ini
+      copy: src=php.ini dest=/etc/php.ini mode=0644
+    - name: start httpd
+      service: enabled=yes name=httpd state=running
